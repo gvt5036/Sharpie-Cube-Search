@@ -29,7 +29,9 @@ jobs:
         git config --global user.email "actions@github.com"
 
     - name: Commit and push the new chunks
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         git add chunk_1.json chunk_2.json
         git commit -m "Update Scryfall card chunks" || echo "No changes to commit"
-        git push
+        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/gvt5036/Sharpie-Cube-Search.git HEAD:main
