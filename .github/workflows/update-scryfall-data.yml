@@ -23,11 +23,14 @@ jobs:
         curl -L https://data.scryfall.io/all-cards/all-cards-20250423092735.json -o chunk_2.json
         echo "Chunk 2 downloaded successfully."
 
-    - name: Commit the new chunks to the repository
+    - name: Set up Git user
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
+
+    - name: Commit and push the new chunks
+      run: |
         git add chunk_1.json chunk_2.json
-        git commit -m "Update Scryfall card chunks"
+        git commit -m "Update Scryfall card chunks" || echo "No changes to commit"
         git push
 
