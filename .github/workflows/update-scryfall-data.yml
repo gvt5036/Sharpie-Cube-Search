@@ -33,4 +33,3 @@ jobs:
         git add chunk_1.json chunk_2.json
         git commit -m "Update Scryfall card chunks" || echo "No changes to commit"
         git push
-
