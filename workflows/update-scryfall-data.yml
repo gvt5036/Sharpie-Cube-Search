@@ -1,0 +1,84 @@
+name: Update Scryfall Data Weekly
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Runs every Sunday at midnight UTC
+  workflow_dispatch:  # You can manually trigger the workflow from the GitHub Actions tab
+
+jobs:
+  update-scryfall-data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
+    - name: Install Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'  # Use an appropriate Python version
+
+    - name: Download the latest Scryfall data
+      run: |
+        curl -L -o all-cards.json https://data.scryfall.io/all-cards/all-cards-latest.json
+
+    - name: Split the JSON file into smaller chunks
+      run: |
+        mkdir split_files
+        python3 -c "
+import json
+import os
+
+# Define the chunk size (in bytes). Adjust as needed (e.g., 100MB).
+CHUNK_SIZE = 100 * 1024 * 1024  # 100 MB
+
+# Load the large JSON file
+input_filename = 'all-cards.json'
+output_dir = 'split_files'
+
+# Create the output directory if it doesn't exist
+os.makedirs(output_dir, exist_ok=True)
+
+# Read the JSON file
+with open(input_filename, 'r') as f:
+    data = json.load(f)
+
+# Split the data into smaller chunks
+chunk_count = 0
+chunk_data = []
+total_size = 0
+
+for item in data:
+    item_size = len(json.dumps(item).encode('utf-8'))
+    total_size += item_size
+
+    chunk_data.append(item)
+
+    # If the chunk size exceeds the limit, write the chunk to a file
+    if total_size > CHUNK_SIZE:
+        chunk_count += 1
+        chunk_filename = os.path.join(output_dir, f'chunk_{chunk_count}.json')
+        with open(chunk_filename, 'w') as chunk_file:
+            json.dump(chunk_data, chunk_file, indent=2)
+        print(f"Written {chunk_filename}")
+        
+        # Reset for the next chunk
+        chunk_data = []
+        total_size = 0
+
+# If there is any leftover data, write it to the final chunk
+if chunk_data:
+    chunk_count += 1
+    chunk_filename = os.path.join(output_dir, f'chunk_{chunk_count}.json')
+    with open(chunk_filename, 'w') as chunk_file:
+        json.dump(chunk_data, chunk_file, indent=2)
+    print(f"Written {chunk_filename}")
+        "
+
+    - name: Commit the updated data to GitHub
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add split_files/*.json
+        git commit -m "Update Scryfall data"
+        git push origin main
