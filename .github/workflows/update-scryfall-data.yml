@@ -29,7 +29,7 @@ jobs:
       - name: Split data into chunks
         run: |
           mkdir -p card_chunks
-          python3 <<EOF
+          python3 -c "
 import json, os
 from collections import defaultdict
 
@@ -47,7 +47,7 @@ os.makedirs('card_chunks', exist_ok=True)
 for key, value in buckets.items():
     with open(f'card_chunks/{key}.json', 'w', encoding='utf-8') as out:
         json.dump(value, out, indent=2)
-EOF
+"
 
       # Step 5: Commit and push updates
       - name: Commit and push updates
