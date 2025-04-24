@@ -8,7 +8,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # Prevents hanging jobs
+    timeout-minutes: 60  # Timeout set to 60 minutes
 
     steps:
       # Step 1: Checkout the repository
@@ -38,6 +38,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global http.postBuffer 524288000  # Increase Git buffer size to avoid RPC issues
           git add card_chunks/*.json
           git commit -m "Update Scryfall data chunks" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/gvt5036/Sharpie-Cube-Search.git HEAD:main
