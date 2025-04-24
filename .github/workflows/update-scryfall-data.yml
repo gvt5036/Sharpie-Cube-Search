@@ -2,7 +2,7 @@ name: Update Scryfall Data
 
 on:
   schedule:
-    - cron: '0 0 * * 0'  # Run once a week (Sunday at midnight)
+    - cron: '0 0 * * 0'  # Run once a week
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -10,26 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Install Python (for splitting script)
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      # Step 3: Download the latest Scryfall data
       - name: Download Scryfall data
         run: |
           curl -o all-cards.json https://data.scryfall.io/all-cards/all-cards-20250423092734.json
 
-      # Step 4: Split the data into chunks by first letter
-      - name: Split data into chunks
+      - name: Write Python split script
         run: |
-          mkdir -p card_chunks
-          python3 -c "
+          cat <<EOF > split_cards.py
 import json, os
 from collections import defaultdict
 
@@ -47,9 +42,11 @@ os.makedirs('card_chunks', exist_ok=True)
 for key, value in buckets.items():
     with open(f'card_chunks/{key}.json', 'w', encoding='utf-8') as out:
         json.dump(value, out, indent=2)
-"
+EOF
 
-      # Step 5: Commit and push updates
+      - name: Run split script
+        run: python3 split_cards.py
+
       - name: Commit and push updates
         run: |
           git config --global user.name "github-actions[bot]"
