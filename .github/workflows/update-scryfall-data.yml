@@ -26,4 +26,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add all-cards.json
           git commit -m "Update Scryfall data"
-          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/gvt5036/Sharpie-Cube-Search.git
+          git push https://x-access-token:${{ secrets.Gh_Token }}@github.com/gvt5036/Sharpie-Cube-Search.git
