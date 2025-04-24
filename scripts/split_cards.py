@@ -13,7 +13,7 @@ buckets = defaultdict(list)
 with open('all-cards.json', 'r', encoding='utf-8') as f:
     objects = ijson.items(f, 'item')  # 'item' refers to the top-level elements in the JSON array
     for i, card in enumerate(objects):
-        if i % 1000 == 0:  # Log every 1000 cards processed
+        if i % 1000 == 0:
             print(f"Processed {i} cards...")
         first = card.get('name', 'unknown')[0].lower()
         if not first.isalpha():
@@ -23,4 +23,4 @@ with open('all-cards.json', 'r', encoding='utf-8') as f:
 # Write out each bucket to a separate file
 for key, value in buckets.items():
     with open(f'card_chunks/{key}.json', 'w', encoding='utf-8') as out:
-        json.dump(value, out, indent=2)
+        json.dump(value, out, indent=2, default=str)
