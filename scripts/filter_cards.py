@@ -15,8 +15,8 @@ ALLOWED_RARITIES = {"common", "uncommon", "rare", "mythic", "special", "bonus"}
 # Include these sets even if rarity is nonstandard
 ALLOWED_SETS = {"ust", "unh", "ugl", "con", "cn2", "myst"}
 
-# Directory to store output
-OUTPUT_DIR = "data"
+# Directory to store output (absolute path)
+OUTPUT_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "filtered_cards.json")
 
 def is_draftable(card):
