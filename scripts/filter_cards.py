@@ -28,8 +28,6 @@ def is_draftable(card):
         return False
     if card.get("oversized"):
         return False
-
-    # Exclude basic lands with no flavor text
     if "Basic Land" in card.get("type_line", "") and not card.get("flavor_text"):
         return False
 
@@ -71,6 +69,13 @@ def build_printable_text(card):
 
     return " ".join(parts)
 
+def extract_image_uris(card):
+    if card.get("image_uris"):
+        return card["image_uris"]
+    elif card.get("card_faces"):
+        return [face["image_uris"] for face in card["card_faces"] if "image_uris" in face]
+    return None
+
 def main():
     print("Fetching Scryfall bulk metadata...")
     meta_resp = requests.get("https://api.scryfall.com/bulk-data")
@@ -90,6 +95,7 @@ def main():
     for card in all_cards:
         if not is_draftable(card):
             continue
+
         filtered_card = {
             "id": card["id"],
             "name": card["name"],
@@ -103,8 +109,11 @@ def main():
             "toughness": card.get("toughness"),
             "oracle_text": card.get("oracle_text"),
             "flavor_text": card.get("flavor_text"),
-            "printable_text": build_printable_text(card)
+            "printable_text": build_printable_text(card),
+            "scryfall_uri": card.get("scryfall_uri"),
+            "image_uris": extract_image_uris(card)
         }
+
         filtered.append(filtered_card)
 
     print(f"Draftable cards retained: {len(filtered)}")
