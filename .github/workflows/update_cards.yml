@@ -1,0 +1,34 @@
+name: Update Filtered MTG Cards
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # Run on the 1st of every month at midnight UTC
+  workflow_dispatch:    # Allow manual runs
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run filter script
+        run: python scripts/filter_cards.py
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add filtered_cards.json
+          git commit -m "Monthly update of filtered MTG cards"
+          git push
+        continue-on-error: true
