@@ -118,7 +118,17 @@ def main():
 
     print(f"Draftable cards retained: {len(filtered)}")
 
+    # Ensure the data directory exists
     os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    # If the file doesn't exist, create it with empty content
+    if not os.path.exists(OUTPUT_FILE):
+        print(f"{OUTPUT_FILE} does not exist. Creating the file.")
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+        print(f"File {OUTPUT_FILE} created.")
+
+    # Save the filtered data to the JSON file
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(filtered, f, ensure_ascii=False, indent=2)
 
