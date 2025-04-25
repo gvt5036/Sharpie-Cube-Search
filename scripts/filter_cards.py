@@ -2,13 +2,16 @@ import json
 import requests
 import re
 
+# Layouts that are not draftable/playable
 EXCLUDED_LAYOUTS = {
     "token", "double_faced_token", "emblem", "art_series", "vanguard",
     "planar", "scheme", "minigame", "reversible_card", "augment", "host", "token_split"
 }
 
+# These rarities are generally used for cards in draftable sets
 ALLOWED_RARITIES = {"common", "uncommon", "rare", "mythic", "special", "bonus"}
 
+# Allow these sets even if rarity is unusual (like Un-sets or Conspiracies)
 ALLOWED_SETS = {
     "ust", "unh", "ugl", "con", "cn2", "myst"
 }
@@ -35,11 +38,10 @@ def normalize_text(text):
     text = text.replace("—", "-")       # Normalize em-dashes
     text = text.replace("“", '"').replace("”", '"')
     text = text.replace("’", "'")
-    text = re.sub(r'\s+', ' ', text)    # Collapse whitespace
+    text = re.sub(r'\s+', ' ', text)    # Collapse multiple spaces/newlines
     return text.strip()
 
 def build_printable_text(card):
-    # Handle modal or double-faced cards
     faces = card.get("card_faces")
     parts = []
     if faces:
@@ -61,9 +63,18 @@ def build_printable_text(card):
     return " ".join(parts)
 
 def main():
-    print("Downloading Scryfall default-cards bulk file...")
-    resp = requests.get("https://data.scryfall.io/default-cards/default-cards.json")
-    all_cards = resp.json()
+    print("Fetching bulk data metadata...")
+    meta_resp = requests.get("https://api.scryfall.com/bulk-data")
+    meta_resp.raise_for_status()
+    meta = meta_resp.json()
+
+    # Get the default_cards file metadata
+    bulk = next(b for b in meta["data"] if b["type"] == "default_cards")
+
+    print("Downloading default-cards JSON...")
+    download_resp = requests.get(bulk["download_uri"])
+    download_resp.raise_for_status()
+    all_cards = download_resp.json()
 
     print(f"Total cards: {len(all_cards)}")
     filtered = []
