@@ -1,6 +1,7 @@
 import json
 import requests
 import re
+import os
 
 # Layouts that are not draftable/playable
 EXCLUDED_LAYOUTS = {
@@ -8,13 +9,15 @@ EXCLUDED_LAYOUTS = {
     "planar", "scheme", "minigame", "reversible_card", "augment", "host", "token_split"
 }
 
-# These rarities are generally used for cards in draftable sets
+# Rarities typically associated with draftable cards
 ALLOWED_RARITIES = {"common", "uncommon", "rare", "mythic", "special", "bonus"}
 
-# Allow these sets even if rarity is unusual (like Un-sets or Conspiracies)
-ALLOWED_SETS = {
-    "ust", "unh", "ugl", "con", "cn2", "myst"
-}
+# Include these sets even if rarity is nonstandard
+ALLOWED_SETS = {"ust", "unh", "ugl", "con", "cn2", "myst"}
+
+# Directory to store output
+OUTPUT_DIR = "data"
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "filtered_cards.json")
 
 def is_draftable(card):
     if card["lang"] != "en":
@@ -25,20 +28,26 @@ def is_draftable(card):
         return False
     if card.get("oversized"):
         return False
+
+    # Exclude basic lands with no flavor text
+    if "Basic Land" in card.get("type_line", "") and not card.get("flavor_text"):
+        return False
+
     rarity = card.get("rarity")
     if rarity in ALLOWED_RARITIES:
         return True
     if card.get("set") in ALLOWED_SETS:
         return True
+
     return False
 
 def normalize_text(text):
     if not text:
         return ""
-    text = text.replace("—", "-")       # Normalize em-dashes
+    text = text.replace("—", "-")
     text = text.replace("“", '"').replace("”", '"')
     text = text.replace("’", "'")
-    text = re.sub(r'\s+', ' ', text)    # Collapse multiple spaces/newlines
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 def build_printable_text(card):
@@ -63,12 +72,11 @@ def build_printable_text(card):
     return " ".join(parts)
 
 def main():
-    print("Fetching bulk data metadata...")
+    print("Fetching Scryfall bulk metadata...")
     meta_resp = requests.get("https://api.scryfall.com/bulk-data")
     meta_resp.raise_for_status()
     meta = meta_resp.json()
 
-    # Get the default_cards file metadata
     bulk = next(b for b in meta["data"] if b["type"] == "default_cards")
 
     print("Downloading default-cards JSON...")
@@ -76,7 +84,7 @@ def main():
     download_resp.raise_for_status()
     all_cards = download_resp.json()
 
-    print(f"Total cards: {len(all_cards)}")
+    print(f"Total cards fetched: {len(all_cards)}")
     filtered = []
 
     for card in all_cards:
@@ -88,17 +96,24 @@ def main():
             "set": card["set"],
             "collector_number": card["collector_number"],
             "layout": card.get("layout"),
+            "type_line": card.get("type_line"),
+            "colors": card.get("colors"),
+            "cmc": card.get("cmc"),
+            "power": card.get("power"),
+            "toughness": card.get("toughness"),
             "oracle_text": card.get("oracle_text"),
             "flavor_text": card.get("flavor_text"),
             "printable_text": build_printable_text(card)
         }
         filtered.append(filtered_card)
 
-    print(f"Filtered draftable cards: {len(filtered)}")
-    with open("filtered_cards.json", "w", encoding="utf-8") as f:
+    print(f"Draftable cards retained: {len(filtered)}")
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(filtered, f, ensure_ascii=False, indent=2)
 
-    print("Output saved to filtered_cards.json")
+    print(f"Output saved to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     main()
