@@ -6,18 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gvt5036/Sharpie-Cube-Search.git"
-  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/gvt5036/Sharpie-Cube-Search/issues"
-  },
-  "homepage": "https://github.com/gvt5036/Sharpie-Cube-Search#readme",
-  "dependencies": {
-    "axios": "^1.8.4"
-  }
+  "license": "ISC"
 }
